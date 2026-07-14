@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase, isSupabaseConfigured } from '../../../lib/supabase';
 import { ADMIN_PASSWORD } from '../../../lib/constants';
 import { playClickSound, playSuccessSound } from '../../../lib/audio';
 
@@ -39,7 +38,7 @@ export default function InstructorLogin() {
         playSuccessSound();
         router.push('/instructor/dashboard');
       } else {
-        setErrorMsg('비밀번호가 올바르지 않습니다. (임시 비밀번호: 1234)');
+        setErrorMsg('비밀번호가 올바르지 않습니다.');
       }
     } catch (err: any) {
       console.error(err);
@@ -72,10 +71,6 @@ export default function InstructorLogin() {
           <h2 className="text-sm font-extrabold text-amber-950 text-center mb-6 border-b-4 border-dashed border-amber-200 pb-3 tracking-widest uppercase">
             🔑 관리자 패스워드 입력 🔑
           </h2>
-
-          <div className="mb-4 p-3 bg-stone-100 border-2 border-stone-300 text-[10px] text-stone-600 font-bold rounded-xl leading-normal text-center">
-            💡 임시 관리자 비밀번호: <span className="underline font-black text-amber-950">{ADMIN_PASSWORD}</span>
-          </div>
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>

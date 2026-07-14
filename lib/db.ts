@@ -306,3 +306,42 @@ export async function getParticipantById(participantId: string): Promise<Partici
   }
 }
 
+/**
+ * Deletes a session and all its participants.
+ */
+export async function deleteSession(sessionId: string): Promise<void> {
+  if (isSupabaseConfigured && supabase) {
+    // Delete participants in this session first to ensure constraint cleanliness
+    const { error: partError } = await supabase
+      .from('participants')
+      .delete()
+      .eq('session_id', sessionId);
+    if (partError) {
+      console.error("Error deleting participants during session delete:", partError);
+    }
+
+    // Delete the session itself
+    const { error: sessError } = await supabase
+      .from('sessions')
+      .delete()
+      .eq('id', sessionId);
+    if (sessError) {
+      throw sessError;
+    }
+  } else {
+    // Mock DB Fallback
+    const sessions = getMockSessions();
+    const filteredSessions = sessions.filter(s => s.id !== sessionId);
+    saveMockSessions(filteredSessions);
+
+    const participants = getMockParticipants();
+    const filteredParticipants = participants.filter(p => p.session_id !== sessionId);
+    saveMockParticipants(filteredParticipants);
+    
+    // Dispatch event to sync UI in other tabs
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event(MOCK_DB_EVENT));
+    }
+  }
+}
+

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createSession, getSessionByCode, subscribeToParticipants, Participant } from '../../../lib/db';
+import { createSession, getSessionByCode, subscribeToParticipants, Participant, deleteSession } from '../../../lib/db';
 import { CHARACTER_PROFILES, ROLES } from '../../../lib/constants';
 import { playClickSound, playSuccessSound } from '../../../lib/audio';
 
@@ -95,6 +95,37 @@ export default function InstructorDashboard() {
     }
   };
 
+  const handleDeleteSession = async () => {
+    if (!selectedSessionId) return;
+    if (!confirm('정말로 이 세션을 삭제하시겠습니까? 세션 내의 모든 참가자 정보도 영구 삭제됩니다.')) {
+      return;
+    }
+
+    setLoading(true);
+    setErrorMsg('');
+    playClickSound();
+
+    try {
+      await deleteSession(selectedSessionId);
+      
+      const updatedSessions = sessions.filter(s => s.id !== selectedSessionId);
+      setSessions(updatedSessions);
+      localStorage.setItem('team_party_instructor_sessions', JSON.stringify(updatedSessions));
+      
+      if (updatedSessions.length > 0) {
+        setSelectedSessionId(updatedSessions[0].id);
+      } else {
+        setSelectedSessionId('');
+      }
+      playSuccessSound();
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg('세션 삭제에 실패했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleLogout = () => {
     playClickSound();
     sessionStorage.removeItem('team_party_instructor_logged_in');
@@ -146,9 +177,16 @@ export default function InstructorDashboard() {
           <button
             onClick={handleCreateSession}
             disabled={loading}
-            className="w-full pixel-btn bg-sky-200 border-4 border-[#6b5b52] hover:bg-sky-300 text-sky-950 text-xs py-2.5 mb-4 rounded-xl shadow-sm"
+            className="w-full pixel-btn bg-sky-200 border-4 border-[#6b5b52] hover:bg-sky-300 text-sky-950 text-xs py-2 mb-4 rounded-xl shadow-sm leading-tight flex flex-col items-center justify-center gap-0.5"
           >
-            {loading ? '코드 생성 중...' : '새로운 세션 생성 (4자리 숫자)'}
+            {loading ? (
+              <span>코드 생성 중...</span>
+            ) : (
+              <>
+                <span>새로운 세션 생성</span>
+                <span className="text-[10px] text-sky-900/80 font-bold font-sans">(4자리 숫자)</span>
+              </>
+            )}
           </button>
 
           {errorMsg && (
@@ -162,17 +200,27 @@ export default function InstructorDashboard() {
             {sessions.length === 0 ? (
               <p className="text-[10px] text-sky-800/70 italic">생성된 세션이 없습니다. 위 버튼을 누르세요.</p>
             ) : (
-              <select
-                value={selectedSessionId}
-                onChange={(e) => setSelectedSessionId(e.target.value)}
-                className="w-full px-2.5 py-1.5 text-xs bg-white border-2 border-sky-200 text-stone-800 rounded-lg focus:outline-none focus:border-sky-400 font-bold"
-              >
-                {sessions.map(s => (
-                  <option key={s.id} value={s.id}>
-                    코드: {s.entry_code}
-                  </option>
-                ))}
-              </select>
+              <div className="flex gap-2">
+                <select
+                  value={selectedSessionId}
+                  onChange={(e) => setSelectedSessionId(e.target.value)}
+                  className="flex-grow px-2 py-1.5 text-xs bg-white border-2 border-sky-200 text-stone-850 rounded-lg focus:outline-none focus:border-sky-400 font-bold"
+                >
+                  {sessions.map(s => (
+                    <option key={s.id} value={s.id}>
+                      코드: {s.entry_code}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleDeleteSession}
+                  disabled={loading}
+                  className="pixel-btn bg-rose-200 hover:bg-rose-300 text-rose-950 text-xs px-3 border-4 border-[#6b5b52] rounded-xl font-black shrink-0"
+                  title="선택된 세션 삭제"
+                >
+                  삭제 🗑️
+                </button>
+              </div>
             )}
           </div>
         </div>

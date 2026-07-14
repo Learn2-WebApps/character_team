@@ -302,4 +302,4 @@ export const STAT_METADATA = {
   N: { name: "감수성 🌊", description: "타인의 감정과 분위기를 읽는 공감·섬세함" }
 };
 
-export const ADMIN_PASSWORD = '1234';
+export const ADMIN_PASSWORD = '0067';
