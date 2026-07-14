@@ -232,7 +232,7 @@ export function subscribeToParticipants(
     // Initial fetch
     getParticipants(sessionId).then(callback);
 
-    // Setup postgres changes subscription with debugging logs
+    // Setup postgres changes subscription without filter to avoid any UUID casting bugs in Supabase Realtime engine
     const channel = supabase
       .channel(`participants:${sessionId}`)
       .on(
@@ -240,13 +240,21 @@ export function subscribeToParticipants(
         {
           event: '*',
           schema: 'public',
-          table: 'participants',
-          filter: `session_id=eq.${sessionId}`
+          table: 'participants'
         },
         async (payload) => {
-          console.log(`[Supabase Realtime] Event received for session: ${sessionId}`, payload);
-          const updated = await getParticipants(sessionId);
-          callback(updated);
+          console.log(`[Supabase Realtime] Event received:`, payload);
+          const newRec = payload.new as any;
+          const oldRec = payload.old as any;
+          const belongsToSession =
+            (newRec && newRec.session_id === sessionId) ||
+            (oldRec && oldRec.session_id === sessionId);
+
+          if (belongsToSession) {
+            console.log(`[Supabase Realtime] Session ${sessionId} participant changed. Refetching...`);
+            const updated = await getParticipants(sessionId);
+            callback(updated);
+          }
         }
       )
       .subscribe((status) => {
