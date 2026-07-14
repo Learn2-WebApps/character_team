@@ -12,6 +12,7 @@ export default function ResultPage() {
   const [isRolling, setIsRolling] = useState(true);
   const [displayedKey, setDisplayedKey] = useState('navigator');
   const [errorMsg, setErrorMsg] = useState('');
+  const [imgError, setImgError] = useState<Record<string, boolean>>({});
 
   // Load participant data
   useEffect(() => {
@@ -137,8 +138,19 @@ export default function ResultPage() {
           </h2>
           
           <div className="cozy-card-pink w-full py-16 px-6 text-center pulse-glow-purple max-w-sm">
-            <div className="text-8xl mb-6 animate-bounce">
-              {currentProfile.emoji}
+            <div className="w-32 h-32 mb-6 mx-auto flex items-center justify-center animate-bounce">
+              {!imgError[currentProfile.key] ? (
+                <img
+                  src={`/characters/${currentProfile.key}.png`}
+                  alt={currentProfile.name}
+                  onError={() => {
+                    setImgError(prev => ({ ...prev, [currentProfile.key]: true }));
+                  }}
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <div className="text-8xl">{currentProfile.emoji}</div>
+              )}
             </div>
             <div className="inline-block px-5 py-2.5 border-4 border-dashed border-rose-300 bg-white/90 text-2xl font-black text-rose-800 rounded-2xl tracking-wider">
               {currentProfile.name}
@@ -167,8 +179,19 @@ export default function ResultPage() {
 
             {/* Header: Emoji & Name */}
             <div className="flex items-center gap-4 border-b-4 border-dashed border-rose-200 pb-4 mb-4">
-              <div className="text-6xl p-2 bg-rose-50 border-2 border-rose-300 rounded-2xl">
-                {currentProfile.emoji}
+              <div className="w-20 h-20 bg-rose-50 border-2 border-rose-300 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden">
+                {!imgError[currentProfile.key] ? (
+                  <img
+                    src={`/characters/${currentProfile.key}.png`}
+                    alt={currentProfile.name}
+                    onError={() => {
+                      setImgError(prev => ({ ...prev, [currentProfile.key]: true }));
+                    }}
+                    className="w-full h-full object-contain p-1"
+                  />
+                ) : (
+                  <span className="text-4xl">{currentProfile.emoji}</span>
+                )}
               </div>
               <div>
                 <span className="text-[10px] bg-rose-100 border border-rose-300 text-rose-800 font-black px-2 py-0.5 rounded-md">

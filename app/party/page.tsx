@@ -17,6 +17,7 @@ export default function PartyPage() {
   const [isRolling, setIsRolling] = useState(true);
   const [displayedRoleKey, setDisplayedRoleKey] = useState('leader');
   const [errorMsg, setErrorMsg] = useState('');
+  const [imgError, setImgError] = useState<Record<string, boolean>>({});
 
   // Modal State for teammate detail character cards
   const [selectedDetailMember, setSelectedDetailMember] = useState<{
@@ -211,8 +212,19 @@ export default function PartyPage() {
 
               {/* Header: Emoji & Name */}
               <div className="flex items-center gap-3.5 border-b-4 border-dashed border-rose-200 pb-3 mb-4 mt-2">
-                <div className="text-5xl p-2 bg-rose-50 border-2 border-rose-300 rounded-xl">
-                  {selectedDetailMember.emoji}
+                <div className="w-16 h-16 bg-rose-50 border-2 border-rose-300 rounded-xl flex items-center justify-center shrink-0 overflow-hidden">
+                  {!imgError[selectedDetailMember.characterKey] ? (
+                    <img
+                      src={`/characters/${selectedDetailMember.characterKey}.png`}
+                      alt={selectedDetailMember.characterName}
+                      onError={() => {
+                        setImgError(prev => ({ ...prev, [selectedDetailMember.characterKey]: true }));
+                      }}
+                      className="w-full h-full object-contain p-1"
+                    />
+                  ) : (
+                    <span className="text-4xl">{selectedDetailMember.emoji}</span>
+                  )}
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5 flex-wrap">
@@ -399,9 +411,24 @@ export default function PartyPage() {
               >
                 {/* Member Identity & Character */}
                 <div className="flex items-center gap-2.5">
-                  <span className="text-xl" title={charProfile ? charProfile.name : ''}>
-                    {charProfile ? charProfile.emoji : '❓'}
-                  </span>
+                  <div className="w-8 h-8 flex items-center justify-center shrink-0 bg-stone-50 border border-stone-200 rounded-lg overflow-hidden" title={charProfile ? charProfile.name : ''}>
+                    {charProfile ? (
+                      !imgError[charProfile.key] ? (
+                        <img
+                          src={`/characters/${charProfile.key}.png`}
+                          alt={charProfile.name}
+                          onError={() => {
+                            setImgError(prev => ({ ...prev, [charProfile.key]: true }));
+                          }}
+                          className="w-full h-full object-contain p-0.5"
+                        />
+                      ) : (
+                        <span className="text-lg">{charProfile.emoji}</span>
+                      )
+                    ) : (
+                      <span className="text-xs font-black text-stone-400">❓</span>
+                    )}
+                  </div>
                   <div>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="font-black text-stone-850">{member.name}</span>
