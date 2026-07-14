@@ -16,9 +16,12 @@ export default function StudentEntrance() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  // Sync sound settings from storage
+
+
+  // Sync sound settings from storage (Force sound off by default as requested)
   useEffect(() => {
-    setSoundOn(isSoundEnabled());
+    setSoundEnabled(false);
+    setSoundOn(false);
   }, []);
 
   const handleSoundToggle = () => {
@@ -118,18 +121,7 @@ export default function StudentEntrance() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 select-none relative pb-16">
-      {/* Sound Toggle (Responsive placement) */}
-      <div className="w-full max-w-lg flex justify-end mb-4">
-        <button
-          onClick={handleSoundToggle}
-          className={`pixel-btn ${soundOn ? 'pixel-btn-purple' : 'pixel-btn-gray'} text-sm py-2 px-4`}
-        >
-          {soundOn ? '🔊 소리 켬' : '🔇 소리 끔'}
-        </button>
-      </div>
-
       <div className="w-full max-w-lg cozy-float">
-        {/* Game Title Logo */}
         <div className="text-center mb-8">
           <div className="inline-block relative">
             <div className="absolute -inset-2 bg-rose-200 rounded-3xl blur opacity-30"></div>
