@@ -88,14 +88,26 @@ export default function StudentEntrance() {
 
       // Join the session
       const participant = await joinSession(session.id, name, affiliation, parsedTeam);
-      
       // Store identification in storage
       sessionStorage.setItem('team_party_participant_id', participant.id);
       sessionStorage.setItem('team_party_session_id', session.id);
       sessionStorage.setItem('team_party_team_number', parsedTeam.toString());
 
       playSuccessSound();
-      router.push('/diagnose');
+
+      // 재접속(Reconnection) 시 진행 상태에 따른 스마트 라우팅
+      if (participant.character_key) {
+        if (participant.assigned_role) {
+          // 역할 배정까지 끝난 경우 결과 화면으로 이동
+          router.push('/party');
+        } else {
+          // 캐릭터 진단만 끝난 경우 대기실로 이동
+          router.push('/lobby');
+        }
+      } else {
+        // 진단을 진행하지 않은 경우 진단지 페이지로 이동
+        router.push('/diagnose');
+      }
     } catch (err: any) {
       console.error(err);
       setErrorMsg('입장 중 오류가 발생했습니다. 다시 시도해주세요.');

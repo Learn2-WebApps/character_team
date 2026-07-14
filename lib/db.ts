@@ -132,22 +132,54 @@ export async function getParticipants(sessionId: string): Promise<Participant[]>
   }
 }
 
-/**
- * Add a participant to a session.
- */
 export async function joinSession(
   sessionId: string,
   name: string,
   affiliation: string,
   teamNumber: number
 ): Promise<Participant> {
+  const trimmedName = name.trim();
+  const trimmedAffiliation = affiliation.trim();
+
   if (isSupabaseConfigured && supabase) {
+    // 1. Check if participant already exists in this session with same name & affiliation
+    const { data: existing, error: checkError } = await supabase
+      .from('participants')
+      .select('*')
+      .eq('session_id', sessionId)
+      .eq('name', trimmedName)
+      .eq('affiliation', trimmedAffiliation)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error("Error checking existing participant:", checkError);
+    }
+
+    if (existing) {
+      console.log("Existing participant found, logging in / reconnecting:", existing);
+      
+      // Update team number if it changed on re-entry
+      if (existing.team_number !== teamNumber) {
+        const { data: updated, error: updateError } = await supabase
+          .from('participants')
+          .update({ team_number: teamNumber })
+          .eq('id', existing.id)
+          .select()
+          .single();
+        if (!updateError && updated) {
+          return updated;
+        }
+      }
+      return existing;
+    }
+
+    // 2. Insert new participant if not found
     const { data, error } = await supabase
       .from('participants')
       .insert([{
         session_id: sessionId,
-        name: name.trim(),
-        affiliation: affiliation.trim(),
+        name: trimmedName,
+        affiliation: trimmedAffiliation,
         team_number: teamNumber,
         is_ready: false
       }])
@@ -160,11 +192,27 @@ export async function joinSession(
     return data;
   } else {
     // Mock DB Fallback
+    const participants = getMockParticipants();
+    const existing = participants.find(
+      p => p.session_id === sessionId &&
+      p.name === trimmedName &&
+      p.affiliation === trimmedAffiliation
+    );
+
+    if (existing) {
+      console.log("Mock DB: Reconnected existing participant:", existing);
+      if (existing.team_number !== teamNumber) {
+        existing.team_number = teamNumber;
+        saveMockParticipants(participants);
+      }
+      return existing;
+    }
+
     const newParticipant: Participant = {
       id: crypto.randomUUID(),
       session_id: sessionId,
-      name: name.trim(),
-      affiliation: affiliation.trim(),
+      name: trimmedName,
+      affiliation: trimmedAffiliation,
       team_number: teamNumber,
       answers: null,
       scores: null,
@@ -175,12 +223,12 @@ export async function joinSession(
       created_at: new Date().toISOString()
     };
 
-    const participants = getMockParticipants();
     participants.push(newParticipant);
     saveMockParticipants(participants);
     return newParticipant;
   }
 }
+
 
 /**
  * Updates an existing participant.
