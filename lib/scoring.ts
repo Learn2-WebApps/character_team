@@ -79,12 +79,38 @@ export function calculateDistance(vec1: Big5Scores, vec2: Big5Scores): number {
 }
 
 /**
- * Ranks all 12 characters based on proximity (Euclidean distance) to the calculated scores.
+ * Standardizes a Big5Scores vector to individual Z-Scores (mean = 0, std = 1 relative to the 5 dimensions).
+ */
+export function standardizeScores(scores: Big5Scores): Big5Scores {
+  const values = [scores.O, scores.C, scores.E, scores.A, scores.N];
+  const mean = values.reduce((sum, val) => sum + val, 0) / 5;
+  const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / 5;
+  const stdDev = Math.sqrt(variance);
+
+  // If variance is 0 (all traits have identical scores), return a flat neutral vector
+  if (stdDev === 0) {
+    return { O: 0, C: 0, E: 0, A: 0, N: 0 };
+  }
+
+  return {
+    O: (scores.O - mean) / stdDev,
+    C: (scores.C - mean) / stdDev,
+    E: (scores.E - mean) / stdDev,
+    A: (scores.A - mean) / stdDev,
+    N: (scores.N - mean) / stdDev
+  };
+}
+
+/**
+ * Ranks all 12 characters based on proximity (Euclidean distance) of their standardized Z-Score profiles.
  * Returns the character keys sorted from closest (1st rank) to furthest.
  */
 export function rankCharacters(scores: Big5Scores): string[] {
+  const stdScores = standardizeScores(scores);
+
   const charactersWithDistance = Object.values(CHARACTER_PROFILES).map(profile => {
-    const dist = calculateDistance(scores, profile.scores);
+    const stdProfileScores = standardizeScores(profile.scores);
+    const dist = calculateDistance(stdScores, stdProfileScores);
     return { key: profile.key, distance: dist };
   });
 
@@ -93,3 +119,5 @@ export function rankCharacters(scores: Big5Scores): string[] {
 
   return charactersWithDistance.map(item => item.key);
 }
+
+
