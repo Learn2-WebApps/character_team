@@ -232,7 +232,7 @@ export function subscribeToParticipants(
     // Initial fetch
     getParticipants(sessionId).then(callback);
 
-    // Setup postgres changes subscription
+    // Setup postgres changes subscription with debugging logs
     const channel = supabase
       .channel(`participants:${sessionId}`)
       .on(
@@ -243,13 +243,15 @@ export function subscribeToParticipants(
           table: 'participants',
           filter: `session_id=eq.${sessionId}`
         },
-        async () => {
-          // Fetch complete list on change and notify callback
+        async (payload) => {
+          console.log(`[Supabase Realtime] Event received for session: ${sessionId}`, payload);
           const updated = await getParticipants(sessionId);
           callback(updated);
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log(`[Supabase Realtime] Subscription status for session ${sessionId}:`, status);
+      });
 
     return () => {
       supabase?.removeChannel(channel);

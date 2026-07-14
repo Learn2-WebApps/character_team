@@ -68,3 +68,8 @@ create policy "Allow public update participants" on participants
 -- Allow authenticated instructors to delete participants if needed
 create policy "Allow instructors delete participants" on participants
   for delete to authenticated using (true);
+
+-- 6. Enable Realtime Replication for the participants table
+-- Copy and run this in your Supabase project SQL Editor to authorize postgres changes subscription
+alter publication supabase_realtime add table participants;
+
