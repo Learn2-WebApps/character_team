@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { getParticipantById, subscribeToParticipants, updateParticipant, Participant } from '../../lib/db';
+import { getParticipantById, subscribeToParticipants, updateParticipant, Participant, getParticipants } from '../../lib/db';
 import { assignRoles } from '../../lib/roleAssignment';
 import { CHARACTER_PROFILES, ROLES, STAT_METADATA } from '../../lib/constants';
 import { playClickSound, playCountdownTone, playSuccessSound } from '../../lib/audio';
@@ -74,7 +74,8 @@ export default function LobbyPage() {
   const allReady = teamMembers.length >= 3 && teamMembers.every(p => p.is_ready);
 
   useEffect(() => {
-    if (isTeamRoleAssigned) {
+    // 역할이 이미 배정되었고, 현재 화면 연출용 카운트다운을 진행하는 도중이 아니라면 카운트다운을 정리하고 조기 리턴
+    if (isTeamRoleAssigned && countdown === null) {
       if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
       setCountdown(null);
       return;
@@ -86,7 +87,8 @@ export default function LobbyPage() {
         playCountdownTone(false);
       }
     } else {
-      if (countdown !== null) {
+      // 카운트다운 도중에 누군가 준비 해제를 누른 경우 (역할이 최종 배정되기 전)
+      if (countdown !== null && !isTeamRoleAssigned) {
         if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
         setCountdown(null);
       }
@@ -127,28 +129,33 @@ export default function LobbyPage() {
     if (!me || teamMembers.length < 3) return;
     setIsAssigning(true);
 
-    const sortedMembers = [...teamMembers].sort((a, b) => a.id.localeCompare(b.id));
-    const isInitiator = sortedMembers[0].id === me.id;
+    const alreadyAssigned = teamMembers.some(p => p.assigned_role !== null);
 
-    if (isInitiator) {
-      console.log("I am the coordinator. Assigning roles for the team...");
-      try {
-        const formattedMembers = teamMembers.map(m => ({
-          id: m.id,
-          name: m.name,
-          character_ranks: m.character_ranks || []
-        }));
+    // [Fallback 안전장치] 만약 최종 준비 상태에서 네트워크 단절 등으로 아직 역할 배정이 수행되지 않은 경우에만 계산 수행
+    if (!alreadyAssigned) {
+      const sortedMembers = [...teamMembers].sort((a, b) => a.id.localeCompare(b.id));
+      const isInitiator = sortedMembers[0].id === me.id;
 
-        const roleMapping = assignRoles(formattedMembers);
+      if (isInitiator) {
+        console.log("[Fallback] 역할 배정 데이터가 없습니다. 이 기기에서 대표로 역할을 긴급 계산하여 저장합니다.");
+        try {
+          const formattedMembers = teamMembers.map(m => ({
+            id: m.id,
+            name: m.name,
+            character_ranks: m.character_ranks || []
+          }));
 
-        for (const member of teamMembers) {
-          await updateParticipant(member.id, {
-            assigned_role: roleMapping[member.id]
-          });
+          const roleMapping = assignRoles(formattedMembers);
+
+          for (const member of teamMembers) {
+            await updateParticipant(member.id, {
+              assigned_role: roleMapping[member.id]
+            });
+          }
+        } catch (err) {
+          console.error("Error during fallback role assignment coordinator run:", err);
+          setErrorMsg('역할 매칭 중 오류가 발생했습니다. 강제 진행합니다.');
         }
-      } catch (err) {
-        console.error("Error during role assignment coordinator run:", err);
-        setErrorMsg('역할 매칭 중 오류가 발생했습니다. 강제 진행합니다.');
       }
     }
 
@@ -159,21 +166,52 @@ export default function LobbyPage() {
 
   const handleToggleReady = async () => {
     console.log("READY 버튼 클릭됨 - 현재 참가자:", me?.name, "ID:", me?.id, "현재 준비 상태:", me?.is_ready);
-    if (!me) {
-      console.warn("handleToggleReady: 'me' 정보가 존재하지 않습니다.");
+    if (!me || !sessionId) {
+      console.warn("handleToggleReady: 필수 세션 또는 사용자 정보가 없습니다.");
       return;
     }
     playClickSound();
     
     try {
-      console.log("updateParticipant 호출 시도 - 변경할 준비 상태:", !me.is_ready);
-      const res = await updateParticipant(me.id, {
-        is_ready: !me.is_ready
+      const nextReadyState = !me.is_ready;
+      console.log("준비 상태 업데이트 시도:", nextReadyState);
+      
+      // 1. 내 준비 상태를 먼저 DB에 반영
+      await updateParticipant(me.id, {
+        is_ready: nextReadyState
       });
-      console.log("updateParticipant 호출 성공 - 결과 데이터:", res);
+      
+      // 2. 캐시 지연이나 동기화 래그를 피하기 위해 DB에서 최신 참가자 목록을 직접 조회
+      const latestMembers = await getParticipants(sessionId);
+      const myTeamLatest = latestMembers.filter(p => p.team_number === teamNumber);
+      
+      // 3. 조원 전체가 준비되었고(최소 3명), 아직 역할 배정이 한 번도 수행되지 않았는지 검사
+      const teamAllReady = myTeamLatest.length >= 3 && myTeamLatest.every(p => p.is_ready);
+      const alreadyAssigned = myTeamLatest.some(p => p.assigned_role !== null);
+      
+      if (teamAllReady && !alreadyAssigned) {
+        console.log("[Lobby] 조건 충족 완료. 이 클라이언트가 대표로 역할을 계산하고 DB에 저장합니다.");
+        
+        const formattedMembers = myTeamLatest.map(m => ({
+          id: m.id,
+          name: m.name,
+          character_ranks: m.character_ranks || []
+        }));
+
+        const roleMapping = assignRoles(formattedMembers);
+
+        // 모든 조원의 역할을 DB에 단 한번 일괄 업데이트
+        for (const member of myTeamLatest) {
+          console.log(`[Lobby] ${member.name} 역할 배정: ${roleMapping[member.id]}`);
+          await updateParticipant(member.id, {
+            assigned_role: roleMapping[member.id]
+          });
+        }
+        console.log("[Lobby] 역할 배정 DB 일괄 반영 성공!");
+      }
     } catch (err) {
-      console.error("READY 상태 업데이트 실패 에러:", err);
-      setErrorMsg('상태 변경에 실패했습니다.');
+      console.error("READY 상태 업데이트 또는 역할 배정 중 에러 발생:", err);
+      setErrorMsg('상태 변경 또는 역할 배정에 실패했습니다.');
     }
   };
 
