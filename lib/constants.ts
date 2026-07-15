@@ -295,7 +295,7 @@ export const ROLES: Record<string, RoleProfile> = {
 };
 
 export const STAT_METADATA = {
-  O: { name: "크리에이티브 💡", description: "아이디어·새로운 시도" },
+  O: { name: "창의성 💡", description: "아이디어·새로운 시도" },
   C: { name: "실행력 ⚙️", description: "꼼꼼함·책임감·완수" },
   E: { name: "추진력 🔥", description: "에너지·주도성·발언" },
   A: { name: "팀워크 🤝", description: "배려·협력·조화" },
