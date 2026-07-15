@@ -487,29 +487,16 @@ export default function PartyPage() {
       </div>
 
       {/* Action Buttons */}
-      <div className="pt-4 flex flex-col sm:flex-row gap-3">
-        <div className="w-full sm:w-1/2">
-          <button
-            onClick={() => {
-              playClickSound();
-              router.push('/lobby');
-            }}
-            className="w-full pixel-btn pixel-btn-purple text-base sm:text-lg"
-          >
-            대기실로 돌아가기 🏕️
-          </button>
-        </div>
-        <div className="w-full sm:w-1/2">
-          <button
-            onClick={() => {
-              playClickSound();
-              router.push('/report');
-            }}
-            className="w-full pixel-btn pixel-btn-gray text-base sm:text-lg"
-          >
-            내 보고서 다시 보기 📊
-          </button>
-        </div>
+      <div className="pt-4">
+        <button
+          onClick={() => {
+            playClickSound();
+            router.push('/lobby');
+          }}
+          className="w-full pixel-btn pixel-btn-purple text-lg"
+        >
+          대기실로 돌아가기 🏕️
+        </button>
       </div>
     </div>
   );

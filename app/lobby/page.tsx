@@ -16,6 +16,7 @@ export default function LobbyPage() {
   
   const [me, setMe] = useState<Participant | null>(null);
   const [teamMembers, setTeamMembers] = useState<Participant[]>([]);
+  const [hasSeenReveal, setHasSeenReveal] = useState(false);
   
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isAssigning, setIsAssigning] = useState(false);
@@ -48,6 +49,11 @@ export default function LobbyPage() {
     setParticipantId(pid);
     setSessionId(sid);
     setTeamNumber(parseInt(team));
+
+    // 이미 역할 슬롯머신 페이지를 경험했는지 로컬 캐시 조회
+    if (sessionStorage.getItem('team_party_role_revealed_' + pid) === 'true') {
+      setHasSeenReveal(true);
+    }
   }, [router]);
 
   // 2. Database Real-time subscription
@@ -76,8 +82,8 @@ export default function LobbyPage() {
   const allReady = teamMembers.length >= 3 && teamMembers.every(p => p.is_ready);
 
   useEffect(() => {
-    // 역할이 이미 배정되었고, 현재 화면 연출용 카운트다운을 진행하는 도중이 아니라면 카운트다운을 정리하고 조기 리턴
-    if (isTeamRoleAssigned && countdown === null) {
+    // 역할이 이미 배정되었고 결과 화면까지 완전히 공개 완료된 경우 카운트다운을 정리하고 조기 리턴
+    if (isTeamRoleAssigned && hasSeenReveal && countdown === null) {
       if (countdownTimerRef.current) clearInterval(countdownTimerRef.current);
       setCountdown(null);
       return;
@@ -95,7 +101,7 @@ export default function LobbyPage() {
         setCountdown(null);
       }
     }
-  }, [allReady, countdown, isAssigning, isTeamRoleAssigned]);
+  }, [allReady, countdown, isAssigning, isTeamRoleAssigned, hasSeenReveal]);
 
   // 4. Countdown timer ticker
   useEffect(() => {
@@ -435,7 +441,7 @@ export default function LobbyPage() {
       })()}
 
       {/* 3-2-1 Cozy Countdown Overlay (Only when in waiting state) */}
-      {countdown !== null && !isTeamRoleAssigned && (
+      {countdown !== null && !hasSeenReveal && (
         <div className="fixed inset-0 bg-amber-50/95 z-50 flex flex-col items-center justify-center animate-fade-in">
           <div className="text-center space-y-4">
             <span className="text-4xl animate-bounce inline-block">🎈</span>
@@ -453,7 +459,7 @@ export default function LobbyPage() {
         </div>
       )}
 
-      {isTeamRoleAssigned ? (
+      {isTeamRoleAssigned && hasSeenReveal ? (
         /* --- Case A: Role Assignment Complete Result Screen --- */
         <div className="space-y-6 flex-grow flex flex-col justify-center">
           <div className="text-center">
