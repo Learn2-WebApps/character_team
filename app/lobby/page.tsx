@@ -158,15 +158,21 @@ export default function LobbyPage() {
   };
 
   const handleToggleReady = async () => {
-    if (!me) return;
+    console.log("READY 버튼 클릭됨 - 현재 참가자:", me?.name, "ID:", me?.id, "현재 준비 상태:", me?.is_ready);
+    if (!me) {
+      console.warn("handleToggleReady: 'me' 정보가 존재하지 않습니다.");
+      return;
+    }
     playClickSound();
     
     try {
-      await updateParticipant(me.id, {
+      console.log("updateParticipant 호출 시도 - 변경할 준비 상태:", !me.is_ready);
+      const res = await updateParticipant(me.id, {
         is_ready: !me.is_ready
       });
+      console.log("updateParticipant 호출 성공 - 결과 데이터:", res);
     } catch (err) {
-      console.error(err);
+      console.error("READY 상태 업데이트 실패 에러:", err);
       setErrorMsg('상태 변경에 실패했습니다.');
     }
   };
