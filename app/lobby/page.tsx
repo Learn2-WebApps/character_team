@@ -551,16 +551,29 @@ export default function LobbyPage() {
             </div>
           </div>
 
-          <div className="pt-4">
-            <button
-              onClick={() => {
-                playClickSound();
-                router.push('/party');
-              }}
-              className="w-full pixel-btn pixel-btn-purple text-lg"
-            >
-              내 상세 역할 카드 보기 👑
-            </button>
+          <div className="pt-4 flex flex-col sm:flex-row gap-3">
+            <div className="w-full sm:w-1/2">
+              <button
+                onClick={() => {
+                  playClickSound();
+                  router.push('/party');
+                }}
+                className="w-full pixel-btn pixel-btn-purple text-base sm:text-lg"
+              >
+                내 상세 역할 카드 보기 👑
+              </button>
+            </div>
+            <div className="w-full sm:w-1/2">
+              <button
+                onClick={() => {
+                  playClickSound();
+                  router.push('/report');
+                }}
+                className="w-full pixel-btn pixel-btn-gray text-base sm:text-lg"
+              >
+                내 보고서 다시 보기 📊
+              </button>
+            </div>
           </div>
         </div>
       ) : (
@@ -624,8 +637,23 @@ export default function LobbyPage() {
                     }`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="text-4xl p-1 bg-amber-50 border-2 border-amber-200 rounded-xl">
-                        {charProfile ? charProfile.emoji : '❓'}
+                      <div className="w-12 h-12 flex items-center justify-center shrink-0 bg-amber-50 border-2 border-amber-200 rounded-xl overflow-hidden">
+                        {charProfile ? (
+                          !imgError[charProfile.key] ? (
+                            <img
+                              src={`/characters/${charProfile.key}.png`}
+                              alt={charProfile.name}
+                              onError={() => {
+                                setImgError(prev => ({ ...prev, [charProfile.key]: true }));
+                              }}
+                              className="w-full h-full object-contain p-0.5"
+                            />
+                          ) : (
+                            <span className="text-3xl">{charProfile.emoji}</span>
+                          )
+                        ) : (
+                          <span className="text-sm font-black text-stone-400">❓</span>
+                        )}
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5 flex-wrap">

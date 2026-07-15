@@ -43,6 +43,11 @@ export default function PartyPage() {
     setParticipantId(pid);
     setSessionId(sid);
     setTeamNumber(parseInt(team));
+
+    // 이미 한번 슬롯머신이 노출되었다면 애니메이션 롤링을 스킵
+    if (sessionStorage.getItem('team_party_role_revealed_' + pid) === 'true') {
+      setIsRolling(false);
+    }
   }, [router]);
 
   // 2. Database Real-time subscription to get team member roles
@@ -69,7 +74,14 @@ export default function PartyPage() {
     if (me && me.assigned_role && isRolling) {
       startRoleSlotMachine(me.assigned_role);
     }
-  }, [me]);
+  }, [me, isRolling]);
+
+  // 슬롯머신이 돌지 않을 때 (또는 이미 완료되었을 때) 노출할 역할을 DB의 배정된 역할로 동기화
+  useEffect(() => {
+    if (me && me.assigned_role && !isRolling) {
+      setDisplayedRoleKey(me.assigned_role);
+    }
+  }, [me, isRolling]);
 
   const startRoleSlotMachine = (targetRoleKey: string) => {
     const keys = Object.keys(ROLES).filter(k => k !== 'housekeeper');
@@ -84,6 +96,12 @@ export default function PartyPage() {
       if (step >= totalSteps) {
         setDisplayedRoleKey(targetRoleKey);
         setIsRolling(false);
+        if (typeof window !== 'undefined') {
+          const pid = sessionStorage.getItem('team_party_participant_id');
+          if (pid) {
+            sessionStorage.setItem('team_party_role_revealed_' + pid, 'true');
+          }
+        }
         playSuccessSound();
         return;
       }
@@ -478,17 +496,30 @@ export default function PartyPage() {
         </div>
       </div>
 
-      {/* Restart/Lobby shortcut */}
-      <div className="text-center">
-        <button
-          onClick={() => {
-            playClickSound();
-            router.push('/lobby');
-          }}
-          className="text-sm text-stone-500 hover:text-stone-700 underline font-black cursor-pointer"
-        >
-          대기실로 돌아가기
-        </button>
+      {/* Action Buttons */}
+      <div className="pt-4 flex flex-col sm:flex-row gap-3">
+        <div className="w-full sm:w-1/2">
+          <button
+            onClick={() => {
+              playClickSound();
+              router.push('/lobby');
+            }}
+            className="w-full pixel-btn pixel-btn-purple text-base sm:text-lg"
+          >
+            대기실로 돌아가기 🏕️
+          </button>
+        </div>
+        <div className="w-full sm:w-1/2">
+          <button
+            onClick={() => {
+              playClickSound();
+              router.push('/report');
+            }}
+            className="w-full pixel-btn pixel-btn-gray text-base sm:text-lg"
+          >
+            내 보고서 다시 보기 📊
+          </button>
+        </div>
       </div>
     </div>
   );
