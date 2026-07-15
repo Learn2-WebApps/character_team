@@ -19,6 +19,7 @@ export default function LobbyPage() {
   const [countdown, setCountdown] = useState<number | null>(null);
   const [isAssigning, setIsAssigning] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [imgError, setImgError] = useState<Record<string, boolean>>({});
 
   // Modal State for teammate detail character cards
   const [selectedDetailMember, setSelectedDetailMember] = useState<{
@@ -272,6 +273,7 @@ export default function LobbyPage() {
   const totalMembers = teamMembers.length;
   const readyMembersCount = teamMembers.filter(p => p.is_ready).length;
   const readyPercent = totalMembers > 0 ? (readyMembersCount / totalMembers) * 100 : 0;
+  const sortedTeamMembers = [...teamMembers].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 
   if (!me) {
     return (
@@ -298,8 +300,8 @@ export default function LobbyPage() {
               </button>
 
               {/* Header: Emoji & Name */}
-              <div className="flex items-center gap-3.5 border-b-4 border-dashed border-rose-200 pb-3 mb-4 mt-2">
-                <div className="text-5xl p-2 bg-rose-50 border-2 border-rose-300 rounded-xl">
+              <div className="flex items-center gap-3 border-b-4 border-dashed border-rose-200 pb-3 mb-4 mt-2">
+                <div className="text-3xl p-1.5 bg-rose-50 border-2 border-rose-300 rounded-xl">
                   {selectedDetailMember.emoji}
                 </div>
                 <div>
@@ -311,7 +313,7 @@ export default function LobbyPage() {
                       {selectedDetailMember.name}님의 성향
                     </span>
                   </div>
-                  <h2 className="text-2xl font-black text-rose-950 mt-1">
+                  <h2 className="text-2xl font-black text-rose-950 mt-0.5">
                     {selectedDetailMember.characterName}
                   </h2>
                 </div>
@@ -327,31 +329,52 @@ export default function LobbyPage() {
                 </p>
               </div>
 
-              {/* Stats dot bars */}
-              <div className="bg-[#fcfaf2]/60 p-3 border-2 border-rose-100 rounded-xl space-y-2 mb-4">
-                <h4 className="text-xs font-black text-rose-800 border-b border-rose-200 pb-1.5 uppercase tracking-wider">
-                  📊 성향 별점 스탯
-                </h4>
-                <div className="grid grid-cols-1 gap-1.5">
-                  <div className="flex items-center gap-2 justify-start text-xs">
-                    <span className="text-stone-650 font-extrabold w-36 shrink-0">{STAT_METADATA.O.name}</span>
-                    {renderModalStarBar(profile.scores.O)}
+              {/* Split Layout: Image on Left, Stats on Right (stacked on mobile) */}
+              <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-stretch mb-4">
+                {/* Left Side: Large Character Image */}
+                <div className="w-full sm:w-2/5 flex flex-col items-center justify-center bg-[#fcfaf2]/40 border-2 border-rose-100 rounded-xl p-3 shrink-0">
+                  <div className="w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center overflow-hidden">
+                    {!imgError[selectedDetailMember.characterKey] ? (
+                      <img
+                        src={`/characters/${selectedDetailMember.characterKey}.png`}
+                        alt={selectedDetailMember.characterName}
+                        onError={() => {
+                          setImgError(prev => ({ ...prev, [selectedDetailMember.characterKey]: true }));
+                        }}
+                        className="w-full h-full object-contain"
+                      />
+                    ) : (
+                      <span className="text-6xl">{selectedDetailMember.emoji}</span>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 justify-start text-xs">
-                    <span className="text-stone-650 font-extrabold w-36 shrink-0">{STAT_METADATA.C.name}</span>
-                    {renderModalStarBar(profile.scores.C)}
-                  </div>
-                  <div className="flex items-center gap-2 justify-start text-xs">
-                    <span className="text-stone-650 font-extrabold w-36 shrink-0">{STAT_METADATA.E.name}</span>
-                    {renderModalStarBar(profile.scores.E)}
-                  </div>
-                  <div className="flex items-center gap-2 justify-start text-xs">
-                    <span className="text-stone-650 font-extrabold w-36 shrink-0">{STAT_METADATA.A.name}</span>
-                    {renderModalStarBar(profile.scores.A)}
-                  </div>
-                  <div className="flex items-center gap-2 justify-start text-xs">
-                    <span className="text-stone-650 font-extrabold w-36 shrink-0">{STAT_METADATA.N.name}</span>
-                    {renderModalStarBar(profile.scores.N)}
+                </div>
+
+                {/* Right Side: Stats dot bars */}
+                <div className="w-full sm:w-3/5 bg-[#fcfaf2]/60 p-3 border-2 border-rose-100 rounded-xl flex flex-col justify-center space-y-2">
+                  <h4 className="text-xs font-black text-rose-800 border-b border-rose-200 pb-1 uppercase tracking-wider mb-1">
+                    📊 성향 별점 스탯
+                  </h4>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2 justify-between text-xs">
+                      <span className="text-stone-650 font-extrabold w-20 shrink-0">{STAT_METADATA.O.name}</span>
+                      {renderModalStarBar(profile.scores.O)}
+                    </div>
+                    <div className="flex items-center gap-2 justify-between text-xs">
+                      <span className="text-stone-650 font-extrabold w-20 shrink-0">{STAT_METADATA.C.name}</span>
+                      {renderModalStarBar(profile.scores.C)}
+                    </div>
+                    <div className="flex items-center gap-2 justify-between text-xs">
+                      <span className="text-stone-650 font-extrabold w-20 shrink-0">{STAT_METADATA.E.name}</span>
+                      {renderModalStarBar(profile.scores.E)}
+                    </div>
+                    <div className="flex items-center gap-2 justify-between text-xs">
+                      <span className="text-stone-650 font-extrabold w-20 shrink-0">{STAT_METADATA.A.name}</span>
+                      {renderModalStarBar(profile.scores.A)}
+                    </div>
+                    <div className="flex items-center gap-2 justify-between text-xs">
+                      <span className="text-stone-650 font-extrabold w-20 shrink-0">{STAT_METADATA.N.name}</span>
+                      {renderModalStarBar(profile.scores.N)}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -452,7 +475,7 @@ export default function LobbyPage() {
             </p>
 
             <div className="space-y-3">
-              {teamMembers.map((member) => {
+              {sortedTeamMembers.map((member) => {
                 const charProfile = member.character_key ? CHARACTER_PROFILES[member.character_key] : null;
                 const memberRole = member.assigned_role ? ROLES[member.assigned_role] : null;
                 const isMe = member.id === me.id;
@@ -573,7 +596,7 @@ export default function LobbyPage() {
                 조원이 아직 보이지 않습니다.
               </div>
             ) : (
-              teamMembers.map((member) => {
+              sortedTeamMembers.map((member) => {
                 const charProfile = member.character_key ? CHARACTER_PROFILES[member.character_key] : null;
                 const isMe = member.id === me.id;
 

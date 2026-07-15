@@ -178,33 +178,22 @@ export default function ResultPage() {
             <span className="absolute bottom-2 left-2 text-2xl">☁️</span>
 
             {/* Header: Emoji & Name */}
-            <div className="flex items-center gap-4 border-b-4 border-dashed border-rose-200 pb-4 mb-4">
-              <div className="w-20 h-20 bg-rose-50 border-2 border-rose-300 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden">
-                {!imgError[currentProfile.key] ? (
-                  <img
-                    src={`/characters/${currentProfile.key}.png`}
-                    alt={currentProfile.name}
-                    onError={() => {
-                      setImgError(prev => ({ ...prev, [currentProfile.key]: true }));
-                    }}
-                    className="w-full h-full object-contain p-1"
-                  />
-                ) : (
-                  <span className="text-4xl">{currentProfile.emoji}</span>
-                )}
+            <div className="flex items-center gap-3 border-b-4 border-dashed border-rose-200 pb-3 mb-4">
+              <div className="text-3xl p-1.5 bg-rose-50 border-2 border-rose-300 rounded-xl">
+                {currentProfile.emoji}
               </div>
               <div>
-                <span className="text-[10px] bg-rose-100 border border-rose-300 text-rose-800 font-black px-2 py-0.5 rounded-md">
+                <span className="text-[9px] bg-rose-100 border border-rose-300 text-rose-800 font-black px-1.5 py-0.5 rounded">
                   나의 대표 성향
                 </span>
-                <h2 className="text-3xl font-black text-rose-950 mt-1.5 tracking-wide">
+                <h2 className="text-2xl font-black text-rose-950 mt-1 tracking-wide">
                   {currentProfile.name}
                 </h2>
               </div>
             </div>
 
             {/* Profile Description */}
-            <div className="space-y-2 mb-5">
+            <div className="space-y-2 mb-4">
               <h3 className="text-sm font-black text-amber-800">
                 &quot;{currentProfile.title}&quot;
               </h3>
@@ -213,32 +202,60 @@ export default function ResultPage() {
               </p>
             </div>
 
-            {/* 5-Axis Dot Stat Bars */}
-            <div className="bg-[#fcfaf2]/50 p-4 border-2 border-rose-200/50 rounded-2xl space-y-3 mb-5">
-              <h4 className="text-xs font-black text-rose-800 border-b border-rose-200 pb-1.5 uppercase tracking-wider">
-                📊 성향 별점 스탯
-              </h4>
-              
-              <div className="grid grid-cols-1 gap-2.5">
-                <div className="flex items-center gap-2 justify-start text-sm">
-                  <span className="text-stone-700 font-extrabold w-36 shrink-0">{STAT_METADATA.O.name}</span>
-                  {currentProfile.scores && renderStarBar(currentProfile.scores.O)}
+            {/* Split Layout: Image on Left, Stats on Right (stacked on mobile) */}
+            <div className="flex flex-col sm:flex-row gap-4 items-center sm:items-stretch mb-5">
+              {/* Left Side: Large Character Image */}
+              <div className="w-full sm:w-2/5 flex flex-col items-center justify-center bg-[#fcfaf2]/40 border-2 border-rose-200/40 rounded-2xl p-4 shrink-0">
+                <div className="w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center overflow-hidden">
+                  {!imgError[currentProfile.key] ? (
+                    <img
+                      src={`/characters/${currentProfile.key}.png`}
+                      alt={currentProfile.name}
+                      onError={() => {
+                        setImgError(prev => ({ ...prev, [currentProfile.key]: true }));
+                      }}
+                      className="w-full h-full object-contain"
+                    />
+                  ) : (
+                    <span className="text-7xl">{currentProfile.emoji}</span>
+                  )}
                 </div>
-                <div className="flex items-center gap-2 justify-start text-sm">
-                  <span className="text-stone-700 font-extrabold w-36 shrink-0">{STAT_METADATA.C.name}</span>
-                  {currentProfile.scores && renderStarBar(currentProfile.scores.C)}
+                <div className="mt-2 text-center">
+                  <span className="text-xs font-black text-rose-800 bg-rose-100/60 px-2 py-0.5 rounded-md border border-rose-200/50">
+                    {currentProfile.name}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2 justify-start text-sm">
-                  <span className="text-stone-700 font-extrabold w-36 shrink-0">{STAT_METADATA.E.name}</span>
-                  {currentProfile.scores && renderStarBar(currentProfile.scores.E)}
-                </div>
-                <div className="flex items-center gap-2 justify-start text-sm">
-                  <span className="text-stone-700 font-extrabold w-36 shrink-0">{STAT_METADATA.A.name}</span>
-                  {currentProfile.scores && renderStarBar(currentProfile.scores.A)}
-                </div>
-                <div className="flex items-center gap-2 justify-start text-sm">
-                  <span className="text-stone-700 font-extrabold w-36 shrink-0">{STAT_METADATA.N.name}</span>
-                  {currentProfile.scores && renderStarBar(currentProfile.scores.N)}
+              </div>
+
+              {/* Right Side: 5-Axis Dot Stat Bars */}
+              <div className="w-full sm:w-3/5 bg-[#fcfaf2]/50 p-4 border-2 border-rose-200/50 rounded-2xl flex flex-col justify-between">
+                <div>
+                  <h4 className="text-xs font-black text-rose-800 border-b border-rose-200 pb-1.5 uppercase tracking-wider mb-3">
+                    📊 성향 별점 스탯
+                  </h4>
+                  
+                  <div className="space-y-2.5">
+                    <div className="flex items-center gap-2 justify-between text-xs">
+                      <span className="text-stone-700 font-extrabold w-20 shrink-0">{STAT_METADATA.O.name}</span>
+                      {currentProfile.scores && renderStarBar(currentProfile.scores.O)}
+                    </div>
+                    <div className="flex items-center gap-2 justify-between text-xs">
+                      <span className="text-stone-700 font-extrabold w-20 shrink-0">{STAT_METADATA.C.name}</span>
+                      {currentProfile.scores && renderStarBar(currentProfile.scores.C)}
+                    </div>
+                    <div className="flex items-center gap-2 justify-between text-xs">
+                      <span className="text-stone-700 font-extrabold w-20 shrink-0">{STAT_METADATA.E.name}</span>
+                      {currentProfile.scores && renderStarBar(currentProfile.scores.E)}
+                    </div>
+                    <div className="flex items-center gap-2 justify-between text-xs">
+                      <span className="text-stone-700 font-extrabold w-20 shrink-0">{STAT_METADATA.A.name}</span>
+                      {currentProfile.scores && renderStarBar(currentProfile.scores.A)}
+                    </div>
+                    <div className="flex items-center gap-2 justify-between text-xs">
+                      <span className="text-stone-700 font-extrabold w-20 shrink-0">{STAT_METADATA.N.name}</span>
+                      {currentProfile.scores && renderStarBar(currentProfile.scores.N)}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
