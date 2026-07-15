@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { CHARACTER_PROFILES, STAT_METADATA } from '../../lib/constants';
 import { getParticipantById } from '../../lib/db';
 import { playSlotTickSound, playSuccessSound } from '../../lib/audio';
+import CharacterImage from '../../components/CharacterImage';
 
 export default function ResultPage() {
   const router = useRouter();
@@ -139,18 +140,12 @@ export default function ResultPage() {
           
           <div className="cozy-card-pink w-full py-16 px-6 text-center pulse-glow-purple max-w-sm">
             <div className="w-32 h-32 mb-6 mx-auto flex items-center justify-center animate-bounce">
-              {!imgError[currentProfile.key] ? (
-                <img
-                  src={`/characters/${currentProfile.key}.png`}
-                  alt={currentProfile.name}
-                  onError={() => {
-                    setImgError(prev => ({ ...prev, [currentProfile.key]: true }));
-                  }}
-                  className="w-full h-full object-contain"
-                />
-              ) : (
-                <div className="text-8xl">{currentProfile.emoji}</div>
-              )}
+              <CharacterImage
+                characterKey={currentProfile.key}
+                fallbackEmoji={currentProfile.emoji}
+                alt={currentProfile.name}
+                className="w-full h-full object-contain"
+              />
             </div>
             <div className="inline-block px-5 py-2.5 border-4 border-dashed border-rose-300 bg-white/90 text-2xl font-black text-rose-800 rounded-2xl tracking-wider">
               {currentProfile.name}
@@ -177,10 +172,15 @@ export default function ResultPage() {
             <span className="absolute top-2 right-2 text-2xl">⭐</span>
             <span className="absolute bottom-2 left-2 text-2xl">☁️</span>
 
-            {/* Header: Emoji & Name */}
+            {/* Header: Image & Name */}
             <div className="flex items-center gap-3 border-b-4 border-dashed border-rose-200 pb-3 mb-4">
-              <div className="text-3xl p-1.5 bg-rose-50 border-2 border-rose-300 rounded-xl">
-                {currentProfile.emoji}
+              <div className="w-10 h-10 flex items-center justify-center shrink-0 bg-rose-50 border-2 border-rose-300 rounded-xl overflow-hidden">
+                <CharacterImage
+                  characterKey={currentProfile.key}
+                  fallbackEmoji={currentProfile.emoji}
+                  alt={currentProfile.name}
+                  className="w-full h-full object-contain p-0.5"
+                />
               </div>
               <div>
                 <span className="text-[9px] bg-rose-100 border border-rose-300 text-rose-800 font-black px-1.5 py-0.5 rounded">
@@ -207,18 +207,12 @@ export default function ResultPage() {
               {/* Left Side: Large Character Image */}
               <div className="w-full sm:w-2/5 flex flex-col items-center justify-center bg-[#fcfaf2]/40 border-2 border-rose-200/40 rounded-2xl p-4 shrink-0">
                 <div className="w-32 h-32 sm:w-36 sm:h-36 flex items-center justify-center overflow-hidden">
-                  {!imgError[currentProfile.key] ? (
-                    <img
-                      src={`/characters/${currentProfile.key}.png`}
-                      alt={currentProfile.name}
-                      onError={() => {
-                        setImgError(prev => ({ ...prev, [currentProfile.key]: true }));
-                      }}
-                      className="w-full h-full object-contain"
-                    />
-                  ) : (
-                    <span className="text-7xl">{currentProfile.emoji}</span>
-                  )}
+                  <CharacterImage
+                    characterKey={currentProfile.key}
+                    fallbackEmoji={currentProfile.emoji}
+                    alt={currentProfile.name}
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <div className="mt-2 text-center">
                   <span className="text-xs font-black text-rose-800 bg-rose-100/60 px-2 py-0.5 rounded-md border border-rose-200/50">

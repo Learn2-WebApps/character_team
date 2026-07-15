@@ -6,6 +6,7 @@ import { getParticipantById, Participant } from '../../lib/db';
 import { convertTo100PointScale, getDifferenceFromAverage } from '../../lib/utils';
 import { BIG5_REPORT_TEXTS, CHARACTER_PROFILES, STAT_METADATA } from '../../lib/constants';
 import { playClickSound, playSuccessSound } from '../../lib/audio';
+import CharacterImage from '../../components/CharacterImage';
 
 export default function ReportPage() {
   const router = useRouter();
@@ -16,7 +17,6 @@ export default function ReportPage() {
   const [me, setMe] = useState<Participant | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
-  const [imgError, setImgError] = useState(false);
 
   useEffect(() => {
     const pid = sessionStorage.getItem('team_party_participant_id');
@@ -216,16 +216,12 @@ export default function ReportPage() {
           </h3>
           <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
             <div className="w-24 h-24 bg-white/60 border-2 border-rose-200 rounded-xl flex items-center justify-center overflow-hidden shrink-0">
-              {!imgError ? (
-                <img
-                  src={`/characters/${characterProfile.key}.png`}
-                  alt={characterProfile.name}
-                  onError={() => setImgError(true)}
-                  className="w-full h-full object-contain p-1"
-                />
-              ) : (
-                <span className="text-5xl">{characterProfile.emoji}</span>
-              )}
+              <CharacterImage
+                characterKey={characterProfile.key}
+                fallbackEmoji={characterProfile.emoji}
+                alt={characterProfile.name}
+                className="w-full h-full object-contain p-1"
+              />
             </div>
             <div className="text-center sm:text-left space-y-1">
               <p className="text-xs text-stone-500 font-extrabold">

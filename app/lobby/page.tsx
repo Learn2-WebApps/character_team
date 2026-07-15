@@ -6,6 +6,7 @@ import { getParticipantById, subscribeToParticipants, updateParticipant, Partici
 import { assignRoles } from '../../lib/roleAssignment';
 import { CHARACTER_PROFILES, ROLES, STAT_METADATA } from '../../lib/constants';
 import { playClickSound, playCountdownTone, playSuccessSound } from '../../lib/audio';
+import CharacterImage from '../../components/CharacterImage';
 
 export default function LobbyPage() {
   const router = useRouter();
@@ -301,8 +302,13 @@ export default function LobbyPage() {
 
               {/* Header: Emoji & Name */}
               <div className="flex items-center gap-3 border-b-4 border-dashed border-rose-200 pb-3 mb-4 mt-2">
-                <div className="text-3xl p-1.5 bg-rose-50 border-2 border-rose-300 rounded-xl">
-                  {selectedDetailMember.emoji}
+                <div className="w-10 h-10 flex items-center justify-center shrink-0 bg-rose-50 border-2 border-rose-300 rounded-xl overflow-hidden">
+                  <CharacterImage
+                    characterKey={selectedDetailMember.characterKey}
+                    fallbackEmoji={selectedDetailMember.emoji}
+                    alt={selectedDetailMember.characterName}
+                    className="w-full h-full object-contain p-0.5"
+                  />
                 </div>
                 <div>
                   <div className="flex items-center gap-1.5 flex-wrap">
@@ -334,18 +340,12 @@ export default function LobbyPage() {
                 {/* Left Side: Large Character Image */}
                 <div className="w-full sm:w-2/5 flex flex-col items-center justify-center bg-[#fcfaf2]/40 border-2 border-rose-100 rounded-xl p-3 shrink-0">
                   <div className="w-28 h-28 sm:w-32 sm:h-32 flex items-center justify-center overflow-hidden">
-                    {!imgError[selectedDetailMember.characterKey] ? (
-                      <img
-                        src={`/characters/${selectedDetailMember.characterKey}.png`}
-                        alt={selectedDetailMember.characterName}
-                        onError={() => {
-                          setImgError(prev => ({ ...prev, [selectedDetailMember.characterKey]: true }));
-                        }}
-                        className="w-full h-full object-contain"
-                      />
-                    ) : (
-                      <span className="text-6xl">{selectedDetailMember.emoji}</span>
-                    )}
+                    <CharacterImage
+                      characterKey={selectedDetailMember.characterKey}
+                      fallbackEmoji={selectedDetailMember.emoji}
+                      alt={selectedDetailMember.characterName}
+                      className="w-full h-full object-contain"
+                    />
                   </div>
                 </div>
 
@@ -493,22 +493,12 @@ export default function LobbyPage() {
                     {/* Member Identity & Character */}
                     <div className="flex items-center gap-2.5">
                       <div className="w-8 h-8 flex items-center justify-center shrink-0 bg-stone-50 border border-stone-200 rounded-lg overflow-hidden" title={charProfile ? charProfile.name : ''}>
-                        {charProfile ? (
-                          !imgError[charProfile.key] ? (
-                            <img
-                              src={`/characters/${charProfile.key}.png`}
-                              alt={charProfile.name}
-                              onError={() => {
-                                setImgError(prev => ({ ...prev, [charProfile.key]: true }));
-                              }}
-                              className="w-full h-full object-contain p-0.5"
-                            />
-                          ) : (
-                            <span className="text-lg">{charProfile.emoji}</span>
-                          )
-                        ) : (
-                          <span className="text-xs font-black text-stone-400">❓</span>
-                        )}
+                        <CharacterImage
+                          characterKey={charProfile?.key}
+                          fallbackEmoji={charProfile?.emoji || '❓'}
+                          alt={charProfile?.name}
+                          className="w-full h-full object-contain p-0.5"
+                        />
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5">
@@ -638,22 +628,12 @@ export default function LobbyPage() {
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 flex items-center justify-center shrink-0 bg-amber-50 border-2 border-amber-200 rounded-xl overflow-hidden">
-                        {charProfile ? (
-                          !imgError[charProfile.key] ? (
-                            <img
-                              src={`/characters/${charProfile.key}.png`}
-                              alt={charProfile.name}
-                              onError={() => {
-                                setImgError(prev => ({ ...prev, [charProfile.key]: true }));
-                              }}
-                              className="w-full h-full object-contain p-0.5"
-                            />
-                          ) : (
-                            <span className="text-3xl">{charProfile.emoji}</span>
-                          )
-                        ) : (
-                          <span className="text-sm font-black text-stone-400">❓</span>
-                        )}
+                        <CharacterImage
+                          characterKey={charProfile?.key}
+                          fallbackEmoji={charProfile?.emoji || '❓'}
+                          alt={charProfile?.name}
+                          className="w-full h-full object-contain p-0.5"
+                        />
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5 flex-wrap">
