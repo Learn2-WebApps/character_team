@@ -335,11 +335,11 @@ export default function ResultPage() {
             <button
               onClick={() => {
                 playSuccessSound();
-                router.push('/lobby');
+                router.push('/report');
               }}
               className="w-full pixel-btn pixel-btn-purple text-lg animate-pulse"
             >
-              대기실로 입장하기 ➡️
+              상세 성격 검사 보고서 보기 📊
             </button>
           </div>
         </div>
